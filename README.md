@@ -1,590 +1,1281 @@
-//#include<stdafx.h>
-#include <windows.h>
-#include <stdio.h>
-#include <time.h>
 
-#define CELL 20
-#define ROWS 25
-#define COLS 15
-//升级所需分数值
-#define SCORE_LEVEL_INC 80
-#define ID_TIMER 1
 
-/////////////////全局变量/////////////////////////////
-HWND hwnd;                  //保存窗口句柄
 
-int score = 0;                //分数
-int level = 0;                //级数
-int interval_unit = 25;       //随级数递增的时间间隔增量
-int interval_base = 300;      //时间间隔基量
-int old_interval;           //保存当前的时间间隔，用于加速操作
+// HelpDlg.cpp : implementation file
+//
 
-int cur_left, cur_top;       //记录方块当前的位置
-int width_block, height_block;   //方块的宽带和高度
+#include "stdafx.h"
+#include "Tetris.h"
+#include "HelpDlg.h"
 
-bool isPause = false;             //暂停标识
-UINT timer_id = 0;                //保存计时器ID
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-static byte *block = NULL;        //方块，方块为随机大小，采用动态分配内存方式，所以这里是指针变量
-byte g_panel[ROWS][COLS] = { 0 };
-////////////////////////////////////////////////////
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-void DrawPanel(HDC hdc);     //绘制表格
-void RefreshPanel(HDC hdc);      //刷新面板
-void DoDownShift(HDC hdc);       //下移
-void DoLeftShift(HDC hdc);       //左移
-void DoRightShift(HDC hdc);      //右移
-void DoAccelerate(HDC hdc);      //加速
-void DoRedirection(HDC hdc); //改变方向
-void ClearRow(HDC hdc);          //消行
-bool ExportBlock();     //输出方块，
-						//该函数会直接修改全局变量block,width_block,height_block,
-						//cur_left和cur_top
-bool IsTouchBottom(HDC hdc);         //判断是否到达底部
+/////////////////////////////////////////////////////////////////////////////
+// CHelpDlg dialog
 
-int main()
+
+CHelpDlg::CHelpDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CHelpDlg::IDD, pParent)
 {
-	HINSTANCE hInstance = GetModuleHandle(NULL);
-	TCHAR szAppName[] = TEXT("teris");
-	MSG msg;
-	WNDCLASS wc;
-
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = WndProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = szAppName;
-	if (!RegisterClass(&wc))
-	{
-		printf("RegisterClass occur errors!");
-		return 0;
-	}
-	hwnd = CreateWindow(szAppName, TEXT("Teris Demo"),
-		WS_OVERLAPPEDWINDOW,
-		0, 0, 0, 0,
-		NULL,
-		NULL,
-		hInstance,
-		NULL);
-	ShowWindow(hwnd, SW_SHOW);
-	UpdateWindow(hwnd);
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-	return msg.wParam;
+	//{{AFX_DATA_INIT(CHelpDlg)
+		// NOTE: the ClassWizard will add member initialization here
+	//}}AFX_DATA_INIT
 }
 
-void DrawPanel(HDC hdc)          //绘制游戏面板
-{
-	int x, y;
-	RECT rect;
 
-	for (y = 0; y<ROWS; y++)
+void CHelpDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CHelpDlg)
+		// NOTE: the ClassWizard will add DDX and DDV calls here
+	//}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(CHelpDlg, CDialog)
+	//{{AFX_MSG_MAP(CHelpDlg)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CHelpDlg message handlers
+
+void CHelpDlg::OnOK() 
+{
+	// TODO: Add extra validation here
+	
+	CDialog::OnOK();
+}
+
+
+// HeroDlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "Tetris.h"
+#include "HeroDlg.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CHeroDlg dialog
+
+
+CHeroDlg::CHeroDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CHeroDlg::IDD, pParent)
+{
+	m_bWriteflg = FALSE;
+}
+
+
+void CHeroDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CHeroDlg)
+	DDX_Text(pDX, IDC_LEVEL_EDIT, m_level);
+	DDX_Text(pDX, IDC_NAME_EDIT, m_name);
+	DDX_Text(pDX, IDC_SCORE_EDIT, m_score);
+	DDV_MinMaxInt(pDX, m_score, 0, 10000);
+	//}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(CHeroDlg, CDialog)
+	//{{AFX_MSG_MAP(CHeroDlg)
+	ON_BN_CLICKED(IDOK_BTN, OnBtn)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CHeroDlg message handlers
+
+void CHeroDlg::OnOK() 
+{
+
+}
+
+void CHeroDlg::SetWriteFlg(BOOL bflg)
+{
+	m_bWriteflg = bflg;
+}
+
+int CHeroDlg::DoModal() 
+{
+	char pszTmp[128] = {0};
+
+	//读取配置文件
+	GetPrivateProfileString("HERO", "name", "0", 
+		pszTmp, 127, ".\\setup.ini");
+	m_name = CString(pszTmp);
+
+	if(!m_bWriteflg)
 	{
-		for (x = 0; x<COLS; x++)
-		{
-			//计算方块的边框范围
-			rect.top = y*CELL + 1;
-			rect.bottom = (y + 1) *CELL - 1;
-			rect.left = x*CELL + 1;
-			rect.right = (x + 1) *CELL - 1;
-			FrameRect(hdc, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
-		}
+		GetPrivateProfileString("HERO", "score", "0", 
+			pszTmp, 127, ".\\setup.ini");
+		m_score = atoi(pszTmp);
+		GetPrivateProfileString("HERO", "level", "0", 
+			pszTmp, 127, ".\\setup.ini");
+		m_level = atoi(pszTmp);
+		
+	}
+
+	return CDialog::DoModal();
+}
+
+void CHeroDlg::OnBtn() 
+{
+	UpdateData(TRUE);
+	if(m_bWriteflg)
+	{
+		CString tmp;
+		tmp.Format("%d", m_score);
+		WritePrivateProfileString("HERO", "name", m_name, ".\\setup.ini");
+		WritePrivateProfileString("HERO", "score", tmp, ".\\setup.ini");
+		tmp.Format("%d", m_level);
+		WritePrivateProfileString("HERO", "level", tmp, ".\\setup.ini");
+	}
+	m_bWriteflg = FALSE;
+
+	CDialog::OnOK();
+}
+
+BOOL CHeroDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	
+	if(m_bWriteflg)
+	{
+		SetDlgItemText(IDOK_BTN, "记录");
+	}
+	
+	return TRUE; 
+}
+
+
+// LevelDlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "Tetris.h"
+#include "LevelDlg.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CLevelDlg dialog
+
+
+CLevelDlg::CLevelDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CLevelDlg::IDD, pParent)
+{
+	//{{AFX_DATA_INIT(CLevelDlg)
+	m_level = 0;
+	//}}AFX_DATA_INIT
+}
+
+
+void CLevelDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CLevelDlg)
+	DDX_Text(pDX, IDC_LEVEL_EDIT, m_level);
+	DDV_MinMaxInt(pDX, m_level, 1, 10);
+	//}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(CLevelDlg, CDialog)
+	//{{AFX_MSG_MAP(CLevelDlg)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CLevelDlg message handlers
+
+void CLevelDlg::OnOK() 
+{
+	if(UpdateData(TRUE))
+	{
+		CString tmp;
+		tmp.Format("%d", m_level);
+		WritePrivateProfileString("SETUP", "level", tmp, ".\\setup.ini");
+		CDialog::OnOK();
 	}
 }
 
-void DoDownShift(HDC hdc)        //下移
+void CLevelDlg::OnCancel() 
 {
-	if (NULL == block) return;
 
-	//判断是否到达底部
-	if (IsTouchBottom(hdc))    //到底部
-	{
-		//消行处理
-		ClearRow(hdc);
-		ExportBlock();      //输出下一个方块
-	}
-
-	cur_top++;
-	RefreshPanel(hdc);
+	CDialog::OnCancel();
 }
 
-void DoLeftShift(HDC hdc)        //左移
+BOOL CLevelDlg::OnInitDialog() 
 {
-	int x, y;
-	if (NULL == block) return;
+	CDialog::OnInitDialog();
+	
+	char pszTmp[128] = {0};
 
-	if (0 == cur_left) return;
-	if (cur_top<0) return; //方块没有完整显示前，不能左移
-	for (y = 0; y<height_block; y++)
-	{
-		for (x = 0; x<width_block; x++)          //从左边开始扫描，获取该行最左边的实心方格块
-		{
-			if (*(block + y*width_block + x))
-			{
-				//判断当前方格在面板上面左边一个方格是否为实心，是就代表不能再左移
-				if (g_panel[cur_top + y][cur_left + x - 1]) return;
+	GetPrivateProfileString("SETUP", "level", "0", 
+		pszTmp, 127, ".\\setup.ini");
+	m_level = atoi(pszTmp);
 
-				break;      //只判断最左边的一个实心方格，之后直接扫描下一行
-			}
-		}
-	}
-	cur_left--;
-	RefreshPanel(hdc);
+	UpdateData(FALSE);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void DoRightShift(HDC hdc)       //右移
+
+// MainFrm.cpp : implementation of the CMainFrame class
+//
+
+#include "stdafx.h"
+#include "Tetris.h"
+
+#include "MainFrm.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CMainFrame
+
+IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
+
+BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
+	//{{AFX_MSG_MAP(CMainFrame)
+		// NOTE - the ClassWizard will add and remove mapping macros here.
+		//    DO NOT EDIT what you see in these blocks of generated code !
+	ON_WM_CREATE()
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+static UINT indicators[] =
 {
-	int x, y;
-	if (NULL == block) return;
+	ID_SEPARATOR,           // status line indicator
+	ID_INDICATOR_CAPS,
+	ID_INDICATOR_NUM,
+	ID_INDICATOR_SCRL,
+};
 
-	if (COLS - width_block == cur_left) return;
-	if (cur_top<0) return;     //方块完整显示前不能右移
-	for (y = 0; y<height_block; y++)
-	{
-		for (x = width_block - 1; x >= 0; x--)   //从右边开始扫描，获取该行最右边的实心方格块
-		{
-			if (*(block + y*width_block + x))
-			{
-				//判断当前方格在面板上右边一个方格是否为实心，是就代表不能再右移
-				if (g_panel[cur_top + y][cur_left + x + 1]) return;
+/////////////////////////////////////////////////////////////////////////////
+// CMainFrame construction/destruction
 
-				break;      //只判断最右边的一个实心方格
-			}
-		}
-	}
-	cur_left++;
-	RefreshPanel(hdc);
+CMainFrame::CMainFrame()
+{
+	// TODO: add member initialization code here
+	
 }
 
-void DoRedirection(HDC hdc)      //改变方向
+CMainFrame::~CMainFrame()
 {
-	int i, j;
-	byte * temp = NULL;
-	if (NULL == block) return;
-	if (cur_top<0) return;     //方块完整显示前不能转向
-
-	temp = (byte *)malloc(sizeof(byte) *width_block*height_block);
-	for (i = 0; i<width_block; i++)
-	{
-		for (j = 0; j<height_block; j++)
-		{
-			//temp[i][j]=block[height_block-j-1][i];
-			*(temp + i*height_block + j) = *(block + (height_block - j - 1) *width_block + i);
-		}
-	}
-
-	//给方块重新定位
-	int incHeight = width_block - height_block;
-	int incWidth = height_block - width_block;
-	int temp_cur_top = cur_top - incHeight / 2;
-	int temp_cur_left = cur_left - incWidth / 2;
-
-	//system("cls");
-	//printf("temp_top=%d, temp_left=%d",temp_cur_top,temp_cur_left);
-
-	//判断当前空间是否足够让方块改变方向
-	int max_len = max(width_block, height_block);
-	//防止下标访问越界
-	if (temp_cur_top + max_len - 1 >= ROWS || temp_cur_left<0 || temp_cur_left + max_len - 1 >= COLS)
-	{
-		free(temp);      //退出前必须先释放内存
-		return;
-	}
-	for (i = 0; i<max_len; i++)
-	{
-		for (j = 0; j<max_len; j++)
-		{
-			//转向所需的空间内有已被占用的实心方格存在，即转向失败
-			if (g_panel[temp_cur_top + i][temp_cur_left + j])
-			{
-				free(temp);      //退出前必须先释放内存
-				return;
-			}
-		}
-	}
-
-	//把临时变量的值赋给block，只能赋值，而不能赋指针值
-	for (i = 0; i<height_block; i++)
-	{
-		for (j = 0; j<width_block; j++)
-		{
-			//block[i][j]=temp[i][j];
-			*(block + i*width_block + j) = *(temp + i*width_block + j);
-		}
-	}
-
-	//全局变量重新被赋值
-	cur_top = temp_cur_top;
-	cur_left = temp_cur_left;
-	//交换
-	i = width_block;
-	width_block = height_block;
-	height_block = i;
-
-	free(temp);      //释放为临时变量分配的内存
-	RefreshPanel(hdc);
 }
 
-void DoAccelerate(HDC hdc)       //加速
+int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	if (NULL == block) return;
-
-	if (IsTouchBottom(hdc))
-	{
-		//消行处理
-		ClearRow(hdc);
-		ExportBlock();
-	}
-	cur_top++;
-	RefreshPanel(hdc);
+	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+	return 0;
 }
 
-bool IsTouchBottom(HDC hdc)
+BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-	int x, y;
-	int i, j;
+	if( !CFrameWnd::PreCreateWindow(cs) )
+		return FALSE;
 
-	if (NULL == block) return false;
-	if (ROWS == cur_top + height_block)
+	cs.cx=550;
+	cs.cy=590;
+	return TRUE;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CMainFrame diagnostics
+
+#ifdef _DEBUG
+void CMainFrame::AssertValid() const
+{
+	CFrameWnd::AssertValid();
+}
+
+void CMainFrame::Dump(CDumpContext& dc) const
+{
+	CFrameWnd::Dump(dc);
+}
+
+#endif //_DEBUG
+
+/////////////////////////////////////////////////////////////////////////////
+// CMainFrame message handlers
+
+
+/////////////////////////////////////////////////////////////////////////////
+//Rule.cpp
+
+#include "stdafx.h"
+#include "Rule.h"
+
+CRule::CRule()
+{
+}
+
+CRule::~CRule()
+{
+}
+
+void CRule::SetLevel(int nLevel)
+{
+	m_nLevel = nLevel;
+}
+
+int CRule::UpLevel(int nLine)
+{
+	if(nLine / 30)
 	{
-		//固定方块
-		for (i = 0; i<height_block; i++)
-		{
-			for (j = 0; j<width_block; j++)
-			{
-				if (*(block + i*width_block + j)) g_panel[cur_top + i][cur_left + j] = 1;
-			}
-		}
+		m_nLevel++;
+	}
+	return m_nLevel;
+}
+
+bool CRule::Win(int Now[4][4], int Russia [100][100], CPoint NowPosition)
+{
+	if(m_nLevel == 11)
+	{//消除行数已经超过10级,游戏结束
 		return true;
 	}
-	for (y = height_block - 1; y >= 0; y--)          //从底行开始扫描
+
+	for(int i=0;i<4;i++)
 	{
-		//判断第一个实心方块在面板上邻接的下方方格是否为实心，是就代表已经到达底部
-		for (x = 0; x<width_block; x++)
+		for(int j=0;j<4;j++)
 		{
-			if (*(block + y*width_block + x))
-			{
-				if (cur_top + y + 1<0) return false;
-				if (g_panel[cur_top + y + 1][cur_left + x])
+			if(Now[i][j]==1)
+			{//到了顶点
+				if(Russia[i+NowPosition.x][j+NowPosition.y]==1)
 				{
-					//判断是否gameover
-					if (cur_top <= 0)
-					{
-						if (timer_id)
-						{
-							KillTimer(hwnd, ID_TIMER);
-							timer_id = 0;
-						}
-						MessageBox(hwnd, TEXT("游戏结束"), TEXT("MSG"), MB_OK | MB_ICONEXCLAMATION);
-						SendMessage(hwnd, WM_CLOSE, 0, 0);
-					}
-					//
-					//固定方块
-					for (i = 0; i<height_block; i++)
-					{
-						for (j = 0; j<width_block; j++)
-						{
-							if (*(block + i*width_block + j)) g_panel[cur_top + i][cur_left + j] = 1;
-						}
-					}
 					return true;
 				}
 			}
 		}
 	}
+
 	return false;
 }
 
-void ClearRow(HDC hdc)               //消行
+
+#include "stdafx.h"
+#include "Tetris.h"
+#include "Russia.h"
+
+#include "HeroDlg.h"
+
+//////////////////////////////////////////////////////////////////////////
+//构造函数
+//////////////////////////////////////////////////////////////////////////
+CRussia::CRussia()
 {
-	int i, j, k;
-	int count = 0;        //消行次数
-	bool isFilled;
-	//消行处理
-	for (i = ROWS - 1; i >= 0; i--)
+	bkMap.LoadBitmap(IDB_BACK);
+	fkMap.LoadBitmap(IDB_FANGKUAI);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//析构函数
+//////////////////////////////////////////////////////////////////////////
+CRussia::~CRussia()
+{
+}
+//////////////////////////////////////////////////////////////////////////
+//行消除函数
+//////////////////////////////////////////////////////////////////////////
+void CRussia::LineDelete()
+{
+	int m=0;		//本次共消去的行数
+	bool flag=0;
+	for(int i=0;i<m_RowCount;i++)
 	{
-		isFilled = true;
-		for (j = 0; j<COLS; j++)
+		//检查要不要消行
+		flag=true;
+		for(int j=0;j<m_ColCount;j++)
 		{
-			if (!g_panel[i][j])
+			if(Russia[i][j]==0)
 			{
-				isFilled = false;
-				break;
+				flag=false;
 			}
 		}
-		if (isFilled)
+
+		//如果要
+		if(flag==true)
 		{
-			for (j = 0; j<COLS; j++)
+			m++;
+			for(int k=i;k>0;k--)
 			{
-				g_panel[i][j] = 0;
-			}
-			//所有方块往下移
-			for (k = i - 1; k >= 0; k--)
-			{
-				for (j = 0; j<COLS; j++)
+				//上行给下行
+				for(int l=0;l<m_ColCount;l++)
 				{
-					g_panel[k + 1][j] = g_panel[k][j];
+					Russia[k][l]=Russia[k-1][l];
 				}
 			}
-			i = i + 1;
-			count++;
+			//第一行为零
+			for(int l=0;l<m_ColCount;l++)
+			{
+				Russia[0][l]=0;
+			}
 		}
 	}
 
-	//最高级别为9级，所以分数极限为(9+1)*SCORE_LEVEL_INC-1
-	if (score >= 10 * SCORE_LEVEL_INC - 1) return;
-
-	//加分规则：消除行数，1行加10分，2行加15分,3行加20分,4行加30分
-	switch (count)
+	DrawWill();
+	//加分
+	switch(m)
 	{
 	case 1:
-		score += 10;
+		m_Score= m_Score + 10 + m_Level * 10;
 		break;
 	case 2:
-		score += 15;
+		m_Score= m_Score + 30 + m_Level * 10;
 		break;
 	case 3:
-		score += 20;
+		m_Score= m_Score + 50 + m_Level * 10;
 		break;
 	case 4:
-		score += 30;
+		m_Score= m_Score + 100 + m_Level * 10;
+		break;
+	default:
 		break;
 	}
+	
+	m_CountLine+=m;
 
-	int temp_level = score / SCORE_LEVEL_INC;
-	if (temp_level>level)
+	m_Level = rule.UpLevel(m_CountLine);
+
+	end = rule.Win(Now, Russia, NowPosition);
+
+	//速度
+	m_Speed=320 - m_Level * 20;
+	
+	if(end)
 	{
-		level = temp_level;
-		//撤销当前计时器，然后重设
-		if (timer_id) KillTimer(hwnd, ID_TIMER);
-		timer_id = SetTimer(hwnd, ID_TIMER, interval_base - level*interval_unit, NULL);
+		HeroWrite();
 	}
 
-	system("cls");
-	printf("score: %d, level: %d ", score, level);
 }
-
-void RefreshPanel(HDC hdc)           //刷新面板
+//////////////////////////////////////////////////////////////////////////
+//移动方块
+//////////////////////////////////////////////////////////////////////////
+void CRussia::Move(int direction)
 {
-	int x, y;
-	RECT rect;
-	HBRUSH h_bSolid = (HBRUSH)GetStockObject(GRAY_BRUSH),
-		h_bEmpty = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	if (NULL == block) return;
-
-	//先刷屏
-	for (y = 0; y<ROWS; y++)
+	if(end) return;
+	
+	switch(direction)
 	{
-		for (x = 0; x<COLS; x++)
+		//左
+	case KEY_LEFT:
+		if(Meet(Now,KEY_LEFT,NowPosition)) break;
+		NowPosition.y--;
+		break;
+		//右
+	case KEY_RIGHT:
+		if(Meet(Now,KEY_RIGHT,NowPosition)) break;
+		NowPosition.y++;
+		break;
+		//下
+	case KEY_DOWN:
+		if(Meet(Now,KEY_DOWN,NowPosition))
 		{
-			//为避免刷掉方块的边框，rect范围必须比边框范围小1
-			rect.top = y*CELL + 2;
-			rect.bottom = (y + 1) *CELL - 2;
-			rect.left = x*CELL + 2;
-			rect.right = (x + 1) *CELL - 2;
-			if (g_panel[y][x])
-				FillRect(hdc, &rect, h_bSolid);
-			else
-				FillRect(hdc, &rect, h_bEmpty);
+			LineDelete();			
+			break;
+		}
+		NowPosition.x++;
+		break;
+		//上
+	case KEY_UP:
+		Meet(Now,KEY_UP,NowPosition);
+		break;
+	default:
+		break;
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+//方块旋转
+//////////////////////////////////////////////////////////////////////////
+bool CRussia::Change(int a[][4],CPoint p,int  b[][100])
+{
+	int tmp[4][4];
+	int i,j;
+	int k=4,l=4;
+	
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			tmp[i][j]=a[j][3-i];
+			After[i][j]=0;	//存放变换后的方块矩阵
 		}
 	}
-	//再定位方块
-	for (y = 0; y<height_block; y++)
+	
+	for(i=0;i<4;i++)
 	{
-		for (x = 0; x<width_block; x++)
+		for(j=0;j<4;j++)
 		{
-			if (*(block + y*width_block + x))          //实心
+			if(tmp[i][j]==1)
 			{
-				rect.top = (y + cur_top) *CELL + 2;
-				rect.bottom = (y + cur_top + 1) *CELL - 2;
-				rect.left = (x + cur_left) *CELL + 2;
-				rect.right = (x + cur_left + 1) *CELL - 2;
-				FillRect(hdc, &rect, h_bSolid);
+				if(k>i) k=i;
+				if(l>j) l=j;
+			}
+		}
+	}
+	for(i=k;i<4;i++)
+	{
+		for(j=l;j<4;j++)
+		{
+			After[i-k][j-l]=tmp[i][j];
+		}	//把变换后的矩阵移到左上角
+	}
+	//判断是否接触，是：返回失败
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{	
+			if(After[i][j]==0)
+			{
+				continue;
+			}
+			if(((p.x+i)>=m_RowCount)||((p.y+j)<0)||((p.y+j)>=m_ColCount))
+			{
+				return false;
+			}
+			if(b[p.x+i][p.y+j]==1)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+//////////////////////////////////////////////////////////////////////////
+//判碰撞,遇到了边界或者有其他方块档住
+//////////////////////////////////////////////////////////////////////////
+bool CRussia::Meet(int a[][4],int direction,CPoint p)
+{
+	int i,j;
+	//先把原位置清0 
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			if(a[i][j]==1)
+			{
+				Russia[p.x+i][p.y+j]=0;
+			}
+		}
+	}
+	
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			if(a[i][j]==1)
+			{
+				switch(direction)
+				{
+				case 1:	//左移
+					if((p.y+j-1)<0) goto exit;
+					if(Russia[p.x+i][p.y+j-1]==1) goto exit;
+					break;
+				case 2://右移
+					if((p.y+j+1)>=m_ColCount) goto exit;
+					if(Russia[p.x+i][p.y+j+1]==1) goto exit;
+					break;
+				case 3://下移
+					if((p.x+i+1)>=m_RowCount) goto exit;
+					if(Russia[p.x+i+1][p.y+j]==1) goto exit;
+					break;
+				case 4://变换
+					if(!Change(a,p,Russia)) goto exit;				
+					for(i=0;i<4;i++)
+					{
+						for(j=0;j<4;j++)
+						{
+							Now[i][j]=After[i][j];
+							a[i][j]=Now[i][j];
+						}
+					}
+					return false;
+					break;
+				}
+			}
+		}
+	}
+			
+	int x,y;
+	x=p.x;
+	y=p.y;
+	//移动位置，重新给数组赋值
+	switch(direction)
+	{
+	case 1:
+		y--;break;
+	case 2:
+		y++;break;
+	case 3:
+		x++;break;
+	case 4:
+		break;
+	}
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			if(a[i][j]==1)
+			{
+				Russia[x+i][y+j]=1;
+			}
+		}
+	}
+			
+	return false;
+exit:
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			if(a[i][j]==1)
+			{
+				Russia[p.x+i][p.y+j]=1;
+			}
+		}
+	}
+	return true;	
+}
+//////////////////////////////////////////////////////////////////////////
+//绘将出现的方块图
+//////////////////////////////////////////////////////////////////////////
+void CRussia::DrawWill()
+{
+	int i,j;
+	int k=4,l=4;
+	
+    //把将要出现的方块给当前数组，并把将要出现数组赋值为零
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			Now[i][j]=Will[i][j];
+			Will[i][j]=0;
+		}
+	}
+	//初始化随即数种子
+	srand(GetTickCount());
+	int nTemp=rand()%Count;
+	//各种图形
+	switch(nTemp)
+	{
+	case 0:
+		Will[0][0]=1;
+		Will[0][1]=1;
+		Will[1][0]=1;
+		Will[1][1]=1;
+		break;
+	case 1:
+		Will[0][0]=1;
+		Will[0][1]=1;
+		Will[1][0]=1;
+		Will[2][0]=1;
+		break;
+	case 2:
+		Will[0][0]=1;
+		Will[0][1]=1;
+		Will[1][1]=1;
+		Will[2][1]=1;
+		break;
+	case 3:
+		Will[0][1]=1;
+		Will[1][0]=1;
+		Will[1][1]=1;
+		Will[2][0]=1;
+		break;
+	case 4:
+		Will[0][0]=1;
+		Will[1][0]=1;
+		Will[1][1]=1;
+		Will[2][1]=1;
+		break;
+	case 5:
+		Will[0][0]=1;
+		Will[1][0]=1;
+		Will[1][1]=1;
+		Will[2][0]=1;
+		break;
+	case 6:
+		Will[0][0]=1;
+		Will[1][0]=1;
+		Will[2][0]=1;
+		Will[3][0]=1;
+		break;
+	default:
+		break;
+	}
+	
+	int tmp[4][4];
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			tmp[i][j]=Will[j][3-i];
+		}
+	}
+	
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			if(tmp[i][j]==1)
+			{
+				if(k>i) k=i;
+				if(l>j) l=j;
+			}
+		}
+	}
+	
+	for(i=0;i<4;i++)
+	{
+		for(j=0;j<4;j++)
+		{
+			Will[i][j]=0;
+		}
+	}
+	//把变换后的矩阵移到左上角
+	for(i=k;i<4;i++)
+	{
+		for(j=l;j<4;j++)
+		{
+			Will[i-k][j-l]=tmp[i][j];
+		}
+	}
+	//开始位置
+	NowPosition.x=0;
+	NowPosition.y=m_ColCount/2;
+}
+//////////////////////////////////////////////////////////////////////////
+//绘游戏界面
+//////////////////////////////////////////////////////////////////////////
+void CRussia::DrawBK(CDC*pDC)
+{
+	CDC Dc;
+	if(Dc.CreateCompatibleDC(pDC)==FALSE)
+	{
+		AfxMessageBox("Can't create DC");
+	}
+	//画背景
+    Dc.SelectObject(bkMap);
+	pDC->BitBlt(0,0,540,550,&Dc,0,0,SRCCOPY);
+    //画分数，速度，难度
+	DrawScore(pDC);
+    //如果有方块，显示方块
+	//游戏区
+	for(int i=0;i<m_RowCount;i++)
+	{
+		for(int j=0;j<m_ColCount;j++)
+		{
+			if(Russia[i][j]==1)
+			{
+				Dc.SelectObject(fkMap);
+				pDC->BitBlt(j*30,i*30,30,30,&Dc,0,0,SRCCOPY);
+			}
+		}
+	}
+	//预先图形
+	for(int n=0;n<4;n++)
+	{
+		for(int m=0;m<4;m++)
+		{
+			if(Will[n][m]==1)
+			{	
+				Dc.SelectObject(fkMap);
+				pDC->BitBlt(365+m*30,240+n*30,30,30,&Dc,0,0,SRCCOPY);
 			}
 		}
 	}
 }
-
-bool ExportBlock()          //输出方块
+//////////////////////////////////////////////////////////////////////////
+//绘分数和等级
+//////////////////////////////////////////////////////////////////////////
+void CRussia::DrawScore(CDC*pDC)
 {
-	int sel;
-	if (block)
+	int nOldDC=pDC->SaveDC();	
+	//设置字体
+	CFont font;    
+	if(0==font.CreatePointFont(300,"Comic Sans MS"))
 	{
-		free(block);     //释放之前分配的内存
-		block = NULL;
+		AfxMessageBox("Can't Create Font");
 	}
+	pDC->SelectObject(&font);
+    //设置字体颜色及其背景颜色
+	CString str;
+	pDC->SetTextColor(RGB(39,244,10));
+	pDC->SetBkColor(RGB(255,255,0));
+    //输出数字
+	str.Format("%d",m_Level);
+	if(m_Level>=0)
+		pDC->TextOut(420,120,str);
 
-	sel = rand() % 7;
-	switch (sel)
+	str.Format("%d",m_CountLine);	
+	if(m_Speed>=0)	
+		pDC->TextOut(420,64,str);
+	
+	str.Format("%d",m_Score);	
+	if(m_Score>=0)
+		pDC->TextOut(420,2,str);
+	
+	pDC->RestoreDC(nOldDC);
+}
+//////////////////////////////////////////////////////////////////////////
+//游戏开始
+//////////////////////////////////////////////////////////////////////////
+void CRussia::GameStart()
+{
+	end=false;//运行结束标志
+    m_Score=0;		//初始分数
+	m_RowCount=18;	//行数
+	m_ColCount=12;	//列数
+	Count=7;		//方块种类
+	m_CountLine = 0;//合计消除行数为0
+
+	char pszTmp[128] = {0};
+					//读取当前游戏等级
+	GetPrivateProfileString("SETUP", "level", "1", 
+			pszTmp, 127, ".\\setup.ini");
+
+	m_Level = atoi(pszTmp);		//初始等级
+	m_Speed=320 - m_Level * 20;	//初始速度
+	rule.SetLevel(m_Level);
+
+	for(int i=0;i<m_RowCount;i++)
 	{
-	case 0:     //水平条
-		width_block = 4;
-		height_block = 1;
-		block = (byte *)malloc(sizeof(byte) *width_block*height_block);
-		*(block + 0) = 1;       //可以理解为*(block+0*width_block+0)=1，即第一行的第一个方格，下面同理
-		*(block + 1) = 1;       //*(block+0*width_block+1)=1
-		*(block + 2) = 1;       //*(block+0*width_block+2)=1
-		*(block + 3) = 1;       //*(block+0*width_block+3)=1
-
-		cur_top = 0 - height_block;
-		cur_left = (COLS - width_block) / 2;
-		break;
-	case 1:     //三角
-		width_block = 3;
-		height_block = 2;
-		block = (byte *)malloc(sizeof(byte) *width_block*height_block);
-		*(block + 0) = 0;       //可以理解为*(block+0*width_block+0)=0，即第一行的第一个方格，下面同理
-		*(block + 1) = 1;       //*(block+0*width_block+1)=1
-		*(block + 2) = 0;       //*(block+0*width_block+2)=0
-		*(block + 3) = 1;       //*(block+1*width_block+0)=1，第二行开始
-		*(block + 4) = 1;       //*(block+1*width_block+1)=1
-		*(block + 5) = 1;       //*(block+1*width_block+2)=1
-
-		cur_top = 0 - height_block;
-		cur_left = (COLS - width_block) / 2;
-		break;
-	case 2:     //左横折
-		width_block = 3;
-		height_block = 2;
-		block = (byte *)malloc(sizeof(byte) *width_block*height_block);
-		*(block + 0) = 1;       //可以理解为*(block+0*width_block+0)=1，下面同理
-		*(block + 1) = 0;       //*(block+0*width_block+1)=0
-		*(block + 2) = 0;       //*(block+0*width_block+2)=0
-		*(block + 3) = 1;       //*(block+1*width_block+0)=1
-		*(block + 4) = 1;       //*(block+1*width_block+1)=1
-		*(block + 5) = 1;       //*(block+1*width_block+2)=1
-
-		cur_top = 0 - height_block;
-		cur_left = (COLS - width_block) / 2;
-		break;
-	case 3:     //右横折
-		width_block = 3;
-		height_block = 2;
-		block = (byte *)malloc(sizeof(byte) *width_block*height_block);
-		*(block + 0) = 0;       //可以理解为*(block+0*width_block+0)=0，下面同理
-		*(block + 1) = 0;       //*(block+0*width_block+1)=0
-		*(block + 2) = 1;       //*(block+0*width_block+2)=1
-		*(block + 3) = 1;       //*(block+1*width_block+0)=1
-		*(block + 4) = 1;       //*(block+1*width_block+1)=1
-		*(block + 5) = 1;       //*(block+1*width_block+2)=1
-
-		cur_top = 0 - height_block;
-		cur_left = (COLS - width_block) / 2;
-		break;
-	case 4:     //左闪电
-		width_block = 3;
-		height_block = 2;
-		block = (byte *)malloc(sizeof(byte) *width_block*height_block);
-		*(block + 0) = 1;       //可以理解为*(block+0*width_block+0)=1，下面同理
-		*(block + 1) = 1;       //*(block+0*width_block+1)=1
-		*(block + 2) = 0;       //*(block+0*width_block+2)=0
-		*(block + 3) = 0;       //*(block+1*width_block+0)=0
-		*(block + 4) = 1;       //*(block+1*width_block+1)=1
-		*(block + 5) = 1;       //*(block+1*width_block+2)=1
-
-		cur_top = 0 - height_block;
-		cur_left = (COLS - width_block) / 2;
-		break;
-	case 5:     //右闪电
-		width_block = 3;
-		height_block = 2;
-		block = (byte *)malloc(sizeof(byte) *width_block*height_block);
-		*(block + 0) = 0;       //可以理解为*(block+0*width_block+0)=0，下面同理
-		*(block + 1) = 1;       //*(block+0*width_block+1)=1
-		*(block + 2) = 1;       //*(block+0*width_block+2)=1
-		*(block + 3) = 1;       //*(block+1*width_block+0)=1
-		*(block + 4) = 1;       //*(block+1*width_block+1)=1
-		*(block + 5) = 0;       //*(block+1*width_block+2)=0
-
-		cur_top = 0 - height_block;
-		cur_left = (COLS - width_block) / 2;
-		break;
-	case 6:     //石头
-		width_block = 2;
-		height_block = 2;
-		block = (byte *)malloc(sizeof(byte) *width_block*height_block);
-		*(block + 0) = 1;       //可以理解为*(block+0*width_block+0)=1，下面同理
-		*(block + 1) = 1;       //*(block+0*width_block+1)=1
-		*(block + 2) = 1;       //*(block+1*width_block+0)=1
-		*(block + 3) = 1;       //*(block+1*width_block+1)=1
-
-		cur_top = 0 - height_block;
-		cur_left = (COLS - width_block) / 2;
-		break;
+		for(int j=0;j<m_ColCount;j++)
+		{
+			Russia[i][j]=0;
+		}
+	}	
+	for(i=0;i<4;i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			Now[i][j]=0;
+			Will[i][j]=0;
+		}
 	}
-	return block != NULL;
+	//开始时将要出现方块没有生成,其不能赋值给当前方块数组，所以连续调用两次
+	DrawWill();	
+	DrawWill();
 }
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+void CRussia::HeroWrite()
 {
-	HDC hdc;
-	PAINTSTRUCT ps;
-	//TCHAR szBuffer[1024];
+	CHeroDlg dlg;
 
-	switch (message)
+	char pszTmp[128] = {0};
+
+	int nHighScore = 0;
+	
+	GetPrivateProfileString("HERO", "score", "0", 
+		pszTmp, 127, ".\\hero.ini");
+
+	nHighScore = atoi(pszTmp);
+
+	if(m_Score>nHighScore)
 	{
-	case WM_CREATE:
-		MoveWindow(hwnd, 400, 10, CELL*COLS + 8, CELL*ROWS + 32, FALSE);      //补齐宽度和高度
-		srand(time(NULL));
-		ExportBlock();
-
-		timer_id = SetTimer(hwnd, ID_TIMER, interval_base - level*interval_unit, NULL);
-		return 0;
-	case WM_TIMER:
-		hdc = GetDC(hwnd);
-		DoDownShift(hdc);
-		ReleaseDC(hwnd, hdc);
-		return 0;
-	case WM_KEYDOWN:
-		hdc = GetDC(hwnd);
-		switch (wParam)
-		{
-		case VK_LEFT:                           //左移
-			if (!isPause) DoLeftShift(hdc);
-			break;
-		case VK_RIGHT:                          //右移
-			if (!isPause) DoRightShift(hdc);
-			break;
-		case VK_UP:                             //转向
-			if (!isPause) DoRedirection(hdc);
-			break;
-		case VK_DOWN:                           //加速
-			if (!isPause) DoAccelerate(hdc);
-			break;
-		case VK_SPACE:      //暂停
-			isPause = !isPause;
-			if (isPause)
-			{
-				if (timer_id) KillTimer(hwnd, ID_TIMER);
-				timer_id = 0;
-			}
-			else
-			{
-				timer_id = SetTimer(hwnd, ID_TIMER, interval_base - level*interval_unit, FALSE);
-			}
-			break;
-		}
-		ReleaseDC(hwnd, hdc);
-		return 0;
-	case WM_PAINT:
-		hdc = BeginPaint(hwnd, &ps);
-		DrawPanel(hdc);          //绘制面板
-		RefreshPanel(hdc);       //刷新
-		EndPaint(hwnd, &ps);
-		return 0;
-	case WM_DESTROY:
-		if (block) free(block);
-		if (timer_id) KillTimer(hwnd, ID_TIMER);
-		PostQuitMessage(0);
-		return 0;
+		
+		dlg.SetWriteFlg(TRUE);		//设置可写入标志
+		
+		dlg.m_level = m_Level;		//设置等级
+		
+		dlg.m_score = m_Score;		//设置分数
+		
+		dlg.DoModal();				//弹出对话框
 	}
-	return DefWindowProc(hwnd, message, wParam, lParam);
+	else
+	{
+		AfxMessageBox("游戏结束,您未能进入英雄榜!");
+	}
+
+}
+
+
+// Tetris.cpp : Defines the class behaviors for the application.
+//
+
+#include "stdafx.h"
+#include "Tetris.h"
+
+#include "MainFrm.h"
+#include "TetrisDoc.h"
+#include "TetrisView.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisApp
+
+BEGIN_MESSAGE_MAP(CTetrisApp, CWinApp)
+	//{{AFX_MSG_MAP(CTetrisApp)
+	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
+		// NOTE - the ClassWizard will add and remove mapping macros here.
+		//    DO NOT EDIT what you see in these blocks of generated code!
+	//}}AFX_MSG_MAP
+	// Standard file based document commands
+	ON_COMMAND(ID_FILE_NEW, CWinApp::OnFileNew)
+	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
+	// Standard print setup command
+	ON_COMMAND(ID_FILE_PRINT_SETUP, CWinApp::OnFilePrintSetup)
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisApp construction
+
+CTetrisApp::CTetrisApp()
+{
+	// TODO: add construction code here,
+	// Place all significant initialization in InitInstance
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// The one and only CTetrisApp object
+
+CTetrisApp theApp;
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisApp initialization
+
+BOOL CTetrisApp::InitInstance()
+{
+	AfxEnableControlContainer();
+
+	// Standard initialization
+	// If you are not using these features and wish to reduce the size
+	//  of your final executable, you should remove from the following
+	//  the specific initialization routines you do not need.
+
+#ifdef _AFXDLL
+	Enable3dControls();			// Call this when using MFC in a shared DLL
+#else
+	Enable3dControlsStatic();	// Call this when linking to MFC statically
+#endif
+
+	// Change the registry key under which our settings are stored.
+	// TODO: You should modify this string to be something appropriate
+	// such as the name of your company or organization.
+	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+
+	LoadStdProfileSettings();  // Load standard INI file options (including MRU)
+
+	// Register the application's document templates.  Document templates
+	//  serve as the connection between documents, frame windows and views.
+
+	CSingleDocTemplate* pDocTemplate;
+	pDocTemplate = new CSingleDocTemplate(
+		IDR_MAINFRAME,
+		RUNTIME_CLASS(CTetrisDoc),
+		RUNTIME_CLASS(CMainFrame),       // main SDI frame window
+		RUNTIME_CLASS(CTetrisView));
+	AddDocTemplate(pDocTemplate);
+
+	// Parse command line for standard shell commands, DDE, file open
+	CCommandLineInfo cmdInfo;
+	ParseCommandLine(cmdInfo);
+
+	// Dispatch commands specified on the command line
+	if (!ProcessShellCommand(cmdInfo))
+		return FALSE;
+
+	// The one and only window has been initialized, so show and update it.
+	m_pMainWnd->ShowWindow(SW_SHOW);
+	m_pMainWnd->UpdateWindow();
+
+	return TRUE;
+}
+
+
+
+
+CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
+{
+	//{{AFX_DATA_INIT(CAboutDlg)
+	//}}AFX_DATA_INIT
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CAboutDlg)
+	//}}AFX_DATA_MAP
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
+	//{{AFX_MSG_MAP(CAboutDlg)
+		// No message handlers
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+// App command to run the dialog
+void CTetrisApp::OnAppAbout()
+{
+	CAboutDlg aboutDlg;
+	aboutDlg.DoModal();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisApp message handlers
+
+
+
+// TetrisView.cpp : implementation of the CTetrisView class
+//
+
+#include "stdafx.h"
+#include "Tetris.h"
+
+#include "TetrisDoc.h"
+#include "TetrisView.h"
+
+#include "HelpDlg.h"
+#include "HeroDlg.h"
+#include "LevelDlg.h"
+#include "Russia.h"
+
+#include <mmsystem.h>
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisView
+
+IMPLEMENT_DYNCREATE(CTetrisView, CView)
+
+BEGIN_MESSAGE_MAP(CTetrisView, CView)
+	//{{AFX_MSG_MAP(CTetrisView)
+	ON_COMMAND(IDR_ABOUT, OnAbout)
+	ON_COMMAND(IDR_HERO_LIST, OnHeroList)
+	ON_COMMAND(IDR_LEVEL_SETUP, OnLevelSetup)
+	ON_COMMAND(IDR_PLAY_MUSIC, OnPlayMusic)
+	ON_COMMAND(IDR_START_GAME, OnStartGame)
+	ON_COMMAND(IDR_HELP, OnHelp)
+	ON_WM_KEYDOWN()
+	ON_WM_TIMER()
+	//}}AFX_MSG_MAP
+	// Standard printing commands
+	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_DIRECT, CView::OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINT_PREVIEW, CView::OnFilePrintPreview)
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisView construction/destruction
+
+CTetrisView::CTetrisView()
+{
+	m_bStart = FALSE;
+}
+
+CTetrisView::~CTetrisView()
+{
+}
+
+BOOL CTetrisView::PreCreateWindow(CREATESTRUCT& cs)
+{
+	// TODO: Modify the Window class or styles here by modifying
+	//  the CREATESTRUCT cs
+
+	return CView::PreCreateWindow(cs);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisView drawing
+
+void CTetrisView::OnDraw(CDC* pDC)
+{
+	CTetrisDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	CDC Dc;
+	if(Dc.CreateCompatibleDC(pDC)==FALSE)
+		AfxMessageBox("Can't create DC");
+	//没有开始，显示封面
+	if( m_bStart)
+	{
+		russia.DrawBK(pDC);
+	}
+
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisView printing
+
+BOOL CTetrisView::OnPreparePrinting(CPrintInfo* pInfo)
+{
+	// default preparation
+	return DoPreparePrinting(pInfo);
+}
+
+void CTetrisView::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
+{
+	// TODO: add extra initialization before printing
+}
+
+void CTetrisView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
+{
+	// TODO: add cleanup after printing
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisView diagnostics
+
+#ifdef _DEBUG
+void CTetrisView::AssertValid() const
+{
+	CView::AssertValid();
+}
+
+void CTetrisView::Dump(CDumpContext& dc) const
+{
+	CView::Dump(dc);
+}
+
+CTetrisDoc* CTetrisView::GetDocument() // non-debug version is inline
+{
+	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CTetrisDoc)));
+	return (CTetrisDoc*)m_pDocument;
+}
+#endif //_DEBUG
+
+/////////////////////////////////////////////////////////////////////////////
+// CTetrisView message handlers
+void CTetrisView::OnAbout() 
+{
+	CAboutDlg aboutDlg;		//生成关于对话框
+	aboutDlg.DoModal();		//弹出关于对话框
+}
+
+void CTetrisView::OnHeroList() 
+{
+	CHeroDlg dlg;			//生成英雄榜对话框
+	dlg.DoModal();			//弹出英雄榜对话框
+}
+
+void CTetrisView::OnLevelSetup() 
+{
+	CLevelDlg	dlg;	//生成等级设置对话框
+	dlg.DoModal();			//弹出等级设置对话框
+}
+
+void CTetrisView::OnPlayMusic() 
+{
+	CWnd*   pMain   =   AfxGetMainWnd();   
+	CMenu*   pMenu   =   pMain->GetMenu();
+	//判断播放音乐菜单当前状态
+	BOOL bCheck = (BOOL)pMenu->GetMenuState(IDR_PLAY_MUSIC, MF_CHECKED);
+	
+	if(m_bStart)
+	{
+		if(bCheck)
+		{
+			pMenu->CheckMenuItem(IDR_PLAY_MUSIC, MF_BYCOMMAND | MF_UNCHECKED);
+		}
+		else
+		{
+			pMenu->CheckMenuItem(IDR_PLAY_MUSIC, MF_BYCOMMAND | MF_CHECKED);
+		}
+		
+		PlayBackMusic(!bCheck);			//调用播放背景音乐功能函数
+	}
+
+}
+
+void CTetrisView::OnStartGame() 
+{
+	m_bStart = true;
+	russia.GameStart();					//调用RUSSIA对象的游戏开始函数
+	SetTimer(1, russia.m_Speed, NULL);
+}
+
+void CTetrisView::OnHelp() 
+{
+	CHelpDlg dlg;						//生成帮助对话框
+	dlg.DoModal();						//弹出对话框
+}
+
+void CTetrisView::PlayBackMusic(BOOL bCheck)
+{
+	//指定文件并播放
+	if(bCheck)
+	{								//播放音乐
+		sndPlaySound("music.wav",SND_ASYNC); 
+	}
+	else
+	{								//停止播放
+		sndPlaySound(NULL,SND_PURGE); 
+	}
+
+}
+
+void CTetrisView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	//没有开始
+	if(!m_bStart)
+		return;
+	
+	switch(nChar)
+	{
+	case VK_LEFT:
+		russia.Move(KEY_LEFT);
+		break;
+	case VK_RIGHT:
+		russia.Move(KEY_RIGHT);
+		break;		
+	case VK_UP:
+		russia.Move(KEY_UP);
+		break;
+	case VK_DOWN:
+		russia.Move(KEY_DOWN);
+		break;
+	}
+	//重画
+	CDC* pDC=GetDC();
+	russia.DrawBK(pDC);
+	ReleaseDC(pDC);
+
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+void CTetrisView::OnTimer(UINT nIDEvent) 
+{
+	//下移
+	russia.Move(KEY_DOWN);
+	//重画
+	russia.DrawBK(GetDC());
+	//关闭TIME1
+	KillTimer(1);
+	//调整速度
+	SetTimer(1, russia.m_Speed, NULL);
+
+	CView::OnTimer(nIDEvent);
 }
